@@ -5,13 +5,11 @@ const extractCounts = (
 	data: any[]
 ): { [key: string]: { [key: string]: number } } => {
 	const countByDate: { [key: string]: { [key: string]: number } } = {};
-
 	dates.forEach((date) => {
 		const counts = getCountForDay(date, hourStart, hourEnd, data);
-		console.log(counts);
+		// console.log(counts);
 		countByDate[formatDateToString(date)] = counts;
 	});
-
 	return countByDate;
 };
 
@@ -24,15 +22,13 @@ const getCountForDay = (
 	const counts: { [key: string]: number } = {};
 	const nextDay = new Date(date.getDate() + 1);
 	data
-		.filter((d) => d['DATE'] === formatDateToString(date) || formatDateToString(nextDay))
+		.filter((d) => d['DATE'] === formatDateToString(date) || d['DATE'] === formatDateToString(nextDay))
 		.filter((d) =>
 			d['DATE'] === date
-				? d['HOUR'] > hourStart || d['HOUR'] === 0
-				: d['HOUR'] < hourEnd && d['HOUR'] !== 0
+				? d['HOUR'] >= hourStart || d['HOUR'] === 0
+				: d['HOUR'] <= hourEnd && d['HOUR'] !== 0
 		)
 		.forEach((row) => {
-			console.log(`CURRENT DATE ${date}`)
-			console.log(`CURRENT ROW ${row}`)
 			counts[row['QA2'] || row['MANUAL ID'] || row['AUTO ID*']] =
 				counts[row['QA2'] || row['MANUAL ID'] || row['AUTO ID*']] === undefined
 					? 1
