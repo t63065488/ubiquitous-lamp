@@ -10,7 +10,7 @@
 
 	import { extractCounts } from '../utils/ecology';
 
-	import * as XLSX from "xlsx";
+	import * as XLSX from 'xlsx';
 
 	let samplePercentInput = $state(10);
 
@@ -63,37 +63,29 @@
 			const csv = parseCsv(text).data;
 
 			csv.forEach((data, index) => {
-				if (data['DATE'] === undefined) {
-					data['DATE'] = csv[index === 0 ? index : index - 1]['DATE'];
+				if (data['DATE-12'] === undefined) {
+					data['DATE-12'] = csv[index === 0 ? index : index - 1]['DATE-12'];
 				}
 			});
 
 			// Get unique dates
-			const dates = getUniqueColumnValues('DATE', csv).map((date: string) => {
-				const dateParts = date.split('/');
-				return new Date(
-					parseInt(dateParts[2], 10),
-					parseInt(dateParts[1], 10) - 1,
-					parseInt(dateParts[0], 10)
-				);
-			}).map((d) => new Date(d));
+			const dates = getUniqueColumnValues('DATE-12', csv);
 
-			const countedData = JSON.parse(JSON.stringify(extractCounts(dates, 14, 10, csv)));
+			const countedData = JSON.parse(JSON.stringify(extractCounts(dates, csv)));
 
 			const rows = [];
 			Object.entries(countedData).forEach(([date, metrics]) => {
-			Object.entries(metrics as any).forEach(([metric, value]) => {
-				rows.push({ Date: date, Metric: metric, Value: value });
+				Object.entries(metrics as any).forEach(([metric, value]) => {
+					rows.push({ Date: date, Metric: metric, Value: value });
+				});
 			});
-			});
-
 
 			// Create a worksheet
 			const worksheet = XLSX.utils.json_to_sheet(rows);
 
 			// Create a workbook and append the worksheet
 			const workbook = XLSX.utils.book_new();
-			XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
 
 			// Create a downloadable Excel file
 			XLSX.writeFile(workbook, `${file.name}-counted-data.xlsx`);

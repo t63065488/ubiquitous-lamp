@@ -8,7 +8,8 @@ const parseCsv = (csvFile: string) => {
 				return 'ROWID';
 			}
 			return header;
-		}
+		},
+		skipEmptyLines: true
 	});
 	return jsonData;
 };

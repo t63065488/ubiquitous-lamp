@@ -1,48 +1,36 @@
 const extractCounts = (
-	dates: Date[],
-	hourStart: number,
-	hourEnd: number,
+	dates: string[],
 	data: any[]
 ): { [key: string]: { [key: string]: number } } => {
 	const countByDate: { [key: string]: { [key: string]: number } } = {};
 	dates.forEach((date) => {
-		const counts = getCountForDay(date, hourStart, hourEnd, data);
-		// console.log(counts);
-		countByDate[formatDateToString(date)] = counts;
+		console.log(`WORKING DATE ${date}`);
+		const counts = getCountForDay(date, data);
+		console.log(counts);
+		countByDate[date] = counts;
 	});
 	return countByDate;
 };
 
 const getCountForDay = (
-	date: Date,
-	hourStart: number,
-	hourEnd: number,
+	date: string,
 	data: any[]
 ): { [key: string]: number } => {
 	const counts: { [key: string]: number } = {};
-	const nextDay = new Date(date.getDate() + 1);
 	data
-		.filter((d) => d['DATE'] === formatDateToString(date) || d['DATE'] === formatDateToString(nextDay))
-		.filter((d) =>
-			d['DATE'] === date
-				? d['HOUR'] >= hourStart || d['HOUR'] === 0
-				: d['HOUR'] <= hourEnd && d['HOUR'] !== 0
-		)
+		.filter((d) => d['DATE-12'] === date)
 		.forEach((row) => {
-			counts[row['QA2'] || row['MANUAL ID'] || row['AUTO ID*']] =
-				counts[row['QA2'] || row['MANUAL ID'] || row['AUTO ID*']] === undefined
-					? 1
-					: counts[row['QA2'] || row['MANUAL ID'] || row['AUTO ID*']] + 1;
+			if (row['QA2']) {
+				counts[row['QA2']] = counts[row['QA2']] ? counts[row['QA2']] + 1 : 1;
+			} else if (row['MANUAL ID']) {
+				counts[row['MANUAL ID']] = counts[row['MANUAL ID']] ? counts[row['MANUAL ID']] + 1 : 1;
+			} else if (row['AUTO ID*']) {
+				counts[row['AUTO ID*']] = counts[row['AUTO ID*']] ? counts[row['AUTO ID*']] + 1 : 1;
+			} else {
+				console.error('No valid value, row skipped');
+			}
 		});
 	return counts;
-};
-
-const formatDateToString = (date: Date): string => {
-	const day = date.getDate().toString().padStart(2, '0'); // Add leading zero if necessary
-	const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Month is 0-indexed, so we add 1
-	const year = date.getFullYear();
-
-	return `${day}/${month}/${year}`;
 };
 
 export { extractCounts };
