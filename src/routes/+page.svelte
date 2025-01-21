@@ -10,6 +10,8 @@
 
 	import { extractCounts } from '../utils/ecology';
 
+	import * as XLSX from 'xlsx';
+
 	let samplePercentInput = $state(10);
 
 	let file: File | null = null;
@@ -60,23 +62,33 @@
 			const text = await file.text();
 			const csv = parseCsv(text).data;
 
+			csv.forEach((data, index) => {
+				if (data['DATE-12'] === undefined) {
+					data['DATE-12'] = csv[index === 0 ? index : index - 1]['DATE-12'];
+				}
+			});
+
 			// Get unique dates
-			const dates = getUniqueColumnValues('DATE', csv).map((d) => new Date(d));
-			const countedData = extractCounts(dates, 14, 10, csv);
+			const dates = getUniqueColumnValues('DATE-12', csv);
 
-			// const toDownload = jsonToCsv(countedData);
+			const countedData = JSON.parse(JSON.stringify(extractCounts(dates, csv)));
 
-			// console.log(toDownload);
+			const rows = [];
+			Object.entries(countedData).forEach(([date, metrics]) => {
+				Object.entries(metrics as any).forEach(([metric, value]) => {
+					rows.push({ Date: date, Metric: metric, Value: value });
+				});
+			});
 
-			const blob = new Blob([JSON.stringify(countedData)], { type: 'text/csv;charset=utf-8;' });
-			const url = URL.createObjectURL(blob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = `${file.name}-counted-data.csv`;
-			link.click();
+			// Create a worksheet
+			const worksheet = XLSX.utils.json_to_sheet(rows);
 
-			// Clean up the object URL
-			URL.revokeObjectURL(url);
+			// Create a workbook and append the worksheet
+			const workbook = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+			// Create a downloadable Excel file
+			XLSX.writeFile(workbook, `${file.name}-counted-data.xlsx`);
 		}
 	};
 </script>
