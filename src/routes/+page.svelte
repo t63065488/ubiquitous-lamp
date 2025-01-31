@@ -56,39 +56,39 @@
 	const handleFileChangeCounts = async (event: Event) => {
 		const input = event.target as HTMLInputElement;
 		if (input.files && input.files[0]) {
-			file = input.files[0];
+			Array.from(input.files).forEach(async (file) => {
+				// Read the file
+				const text = await file.text();
+				const csv = parseCsv(text).data;
 
-			// Read the file
-			const text = await file.text();
-			const csv = parseCsv(text).data;
-
-			csv.forEach((data, index) => {
-				if (data['DATE-12'] === undefined) {
-					data['DATE-12'] = csv[index === 0 ? index : index - 1]['DATE-12'];
-				}
-			});
-
-			// Get unique dates
-			const dates = getUniqueColumnValues('DATE-12', csv);
-
-			const countedData = JSON.parse(JSON.stringify(extractCounts(dates, csv)));
-
-			const rows = [];
-			Object.entries(countedData).forEach(([date, metrics]) => {
-				Object.entries(metrics as any).forEach(([metric, value]) => {
-					rows.push({ Date: date, Metric: metric, Value: value });
+				csv.forEach((data, index) => {
+					if (data['DATE-12'] === undefined) {
+						data['DATE-12'] = csv[index === 0 ? index : index - 1]['DATE-12'];
+					}
 				});
+
+				// Get unique dates
+				const dates = getUniqueColumnValues('DATE-12', csv);
+
+				const countedData = JSON.parse(JSON.stringify(extractCounts(dates, csv)));
+
+				const rows = [];
+				Object.entries(countedData).forEach(([date, metrics]) => {
+					Object.entries(metrics as any).forEach(([metric, value]) => {
+						rows.push({ Date: date, Metric: metric, Value: value });
+					});
+				});
+
+				// Create a worksheet
+				const worksheet = XLSX.utils.json_to_sheet(rows);
+
+				// Create a workbook and append the worksheet
+				const workbook = XLSX.utils.book_new();
+				XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+
+				// Create a downloadable Excel file
+				XLSX.writeFile(workbook, `${file.name}-counted-data.xlsx`);
 			});
-
-			// Create a worksheet
-			const worksheet = XLSX.utils.json_to_sheet(rows);
-
-			// Create a workbook and append the worksheet
-			const workbook = XLSX.utils.book_new();
-			XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-
-			// Create a downloadable Excel file
-			XLSX.writeFile(workbook, `${file.name}-counted-data.xlsx`);
 		}
 	};
 </script>
@@ -103,5 +103,5 @@
 	<br />
 	<hr />
 	<label for="table-counts">Count Table File Upload:</label>
-	<input type="file" id="file-upload" accept=".csv" onchange={handleFileChangeCounts} />
+	<input type="file" id="file-upload" accept=".csv" onchange={handleFileChangeCounts} multiple />
 </div>
