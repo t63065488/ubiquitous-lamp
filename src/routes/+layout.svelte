@@ -29,7 +29,7 @@
 			</Navigation.Rail>
 		</aside>
 
-		<main class="space-y-4">
+		<main class="space-y-4 p-4">
 			{@render children?.()}
 		</main>
 	</div>

@@ -8,10 +8,10 @@
 		onFileRejection: () => void;
 	}
 
-	const { name, onFileChange: onUpload }: FileUploadHandlerProps = $props();
+	const { name, onFileChange }: FileUploadHandlerProps = $props();
 </script>
 
-<FileUpload {name} onFileChange={onUpload}>
+<FileUpload {name} onFileChange={console.log}>
 	{#snippet iconInterface()}
 		<FilePlus class="size-4" />
 	{/snippet}
