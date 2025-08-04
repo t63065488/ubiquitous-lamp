@@ -1,11 +1,13 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { Navigation, AppBar } from '@skeletonlabs/skeleton-svelte';
-	import { LampDesk, SwatchBook, Layers } from '@lucide/svelte';
-
+	import { toaster } from '$lib/toaster-svelte';
+	import { LampDesk, Layers, SwatchBook } from '@lucide/svelte';
+	import { AppBar, Navigation, Toaster } from '@skeletonlabs/skeleton-svelte';
 	let { children } = $props();
 </script>
+
+<Toaster {toaster} />
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
@@ -29,9 +31,8 @@
 			</Navigation.Rail>
 		</aside>
 
-		<main class="space-y-4 p-4">
+		<main class="flex justify-center space-y-4 p-4">
 			{@render children?.()}
 		</main>
 	</div>
-	<footer>Footer Content</footer>
 </div>

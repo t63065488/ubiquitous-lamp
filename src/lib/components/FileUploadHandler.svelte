@@ -1,67 +1,144 @@
 <script lang="ts">
-	import { FileUpload } from '@skeletonlabs/skeleton-svelte';
-	import { FilePlus, File, CircleX, Check, X } from '@lucide/svelte';
-	import type { FileChangeDetails } from '@zag-js/file-upload';
+	import type { FileChangeDetails, FileRejectDetails } from '@zag-js/file-upload';
+	import type { Snippet } from 'svelte';
+
+	import { toaster } from '$lib/toaster-svelte';
+	import { Check, CircleX, File as FileIcon, FilePlus, Hourglass, X } from '@lucide/svelte';
+	import { FileUpload, ProgressRing } from '@skeletonlabs/skeleton-svelte';
+	import { v4 as uuidv4 } from 'uuid';
 
 	interface FileTableEntry {
+		file: File;
+		id: string;
 		name: string;
-		processed: boolean;
+		processingState: 'error' | 'pending' | 'processed' | 'processing';
 	}
 
 	interface FileUploadHandlerProps {
+		additions?: Snippet;
+		label?: string;
 		name: string;
-		processFile: () => void;
-		onFileRejection: () => void;
+		processFile: (file: File) => Promise<any>;
 	}
 
-	const { name, processFile: onFileChange }: FileUploadHandlerProps = $props();
+	const {
+		additions,
+		label = 'Click or drag and drop files here (accepts .csv, xls, xlsx).',
+		name,
+		processFile
+	}: FileUploadHandlerProps = $props();
 
 	let files: FileTableEntry[] = $state([]);
 
 	const populateFiles = (fileChanges: FileChangeDetails) => {
-		files = fileChanges.acceptedFiles.map((file) => {
+		files = fileChanges.acceptedFiles.map((file): FileTableEntry => {
 			return {
+				file: file,
+				id: uuidv4(),
 				name: file.name,
-				processed: false
+				processingState: 'pending'
 			};
+		});
+	};
+
+	const onFileRejection = (details: FileRejectDetails) => {
+		toaster.error({
+			description:
+				'There was an error uploading chosen files. \n' +
+				details.files.map((file) => file.file.name + ': ' + file.errors).join('\n'),
+			title: 'Error'
+		});
+	};
+
+	const processAllFiles = async () => {
+		files.forEach((file) => {
+			file.processingState = 'processing';
+			processFile(file.file)
+				.then((value) => {
+					file.processingState = 'processed';
+				})
+				.catch((error) => {
+					console.error(error);
+					file.processingState = 'error';
+				});
 		});
 	};
 </script>
 
-<div>
-	<FileUpload {name} onFileChange={populateFiles}>
+<div class="space-y-4">
+	<FileUpload
+		{name}
+		{label}
+		onFileChange={populateFiles}
+		onFileReject={onFileRejection}
+		accept={[
+			'text/csv',
+			'application/vnd.ms-excel',
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		]}
+		maxFiles={Infinity}
+	>
 		{#snippet iconInterface()}
 			<FilePlus class="size-4" />
 		{/snippet}
 		{#snippet iconFile()}
-			<File class="size-4" />
+			<FileIcon class="size-4" />
 		{/snippet}
 		{#snippet iconFileRemove()}
 			<CircleX class="size-4" />
 		{/snippet}
 	</FileUpload>
-	<hr class="hr" />
-	<table class="table caption-bottom">
-		<caption class="pt-4">Uploaded Files</caption>
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>processed</th>
-			</tr>
-		</thead>
-		<tbody class="[&>tr]:hover:preset-tonal-primary">
-			{#each files as row}
+	{#if files.length !== 0}
+		<hr class="hr border-t-2" />
+		{@render additions?.()}
+		<table class="table">
+			<caption>Uploaded Files</caption>
+			<thead>
 				<tr>
-					<td>{row.name}</td>
-					<td>
-						{#if row.processed}
-							<Check color="green" />
-						{:else}
-							<X color="red" />
-						{/if}
+					<th>Name</th>
+					<th>Processed</th>
+					<th>Download</th>
+				</tr>
+			</thead>
+			<tbody class="[&>tr]:hover:preset-tonal-primary">
+				{#each files as row (row.id)}
+					<tr>
+						<td class="text-left">{row.name}</td>
+						<td>
+							{#if row.processingState === 'pending'}
+								<Hourglass />
+							{:else if row.processingState === 'processing'}
+								<ProgressRing value={null} size="size-6" />
+							{:else if row.processingState === 'processed'}
+								<Check color="green" />
+							{:else if row.processingState === 'error'}
+								<X color="red" />
+							{/if}
+						</td>
+						<td>
+							<p class="text-left opacity-60">N/A</p>
+						</td>
+					</tr>
+				{/each}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="2">
+						<button
+							type="button"
+							class="btn preset-filled"
+							disabled={files.some((file) => file.processingState === 'processing')}
+							onclick={() => processAllFiles()}>Process All</button
+						>
+						<button
+							type="button"
+							class="btn preset-filled"
+							disabled={!files.some((file) => file.processingState === 'processed')}
+							>Download All</button
+						>
 					</td>
 				</tr>
-			{/each}
-		</tbody>
-	</table>
+			</tfoot>
+		</table>
+	{/if}
 </div>
