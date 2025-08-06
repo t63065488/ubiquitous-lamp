@@ -1,12 +1,36 @@
 <script lang="ts">
 	import FileUploadHandler from '$lib/components/FileUploadHandler.svelte';
-    import { Slider } from '@skeletonlabs/skeleton-svelte';
+	import { Slider } from '@skeletonlabs/skeleton-svelte';
+	import Papa from 'papaparse';
 
-    let value: number[] = $state([10])
+	let value: number[] = $state([10]);
+
+	let columns: string[] = $state([]);
+	let uniqueValues: Set<string> = $state(new Set<string>());
 
 	const processFile = async (file: File) => {
-		console.log(file);
-		await new Promise((f) => setTimeout(f, 3000));
+		const jsondata = Papa.parse(await file.text(), {
+			header: true,
+			skipEmptyLines: true,
+			transformHeader(header, index) {
+				if (!header && index === 0) {
+					return 'ID';
+				}
+				return header;
+			}
+		});
+		console.log(jsondata);
+
+		const newUniqueValues = new Set<string>();
+
+		jsondata.data.forEach((element: { [key: string]: string }) =>
+			newUniqueValues.add(element['AUTO ID*'])
+		);
+
+		uniqueValues = newUniqueValues;
+		console.log(uniqueValues)
+		console.log(newUniqueValues)
+		columns = jsondata.meta.fields;
 	};
 </script>
 
@@ -14,9 +38,31 @@
 	<h2 class="pb-4 h2">Sample Data</h2>
 	<FileUploadHandler name="Count" {processFile}>
 		{#snippet additions()}
-            <p>Select Sample Percentage</p>
-			<Slider name="sample-percentage-input" {value} onValueChange={(e) => (value = e.value)} markers={[10, 25, 50, 75, 90]}/>
-            <p class="p opacity-60">Current: {value[0]}%</p>
+			<form class="mx-auto w-full max-w-md space-y-4">
+				<!-- Default -->
+				<label class="label">
+					<span class="label-text">Select Column to Sample</span>
+					<select class="select">
+						{#each columns as column (column)}
+							<option value={column}>{column}</option>
+						{/each}
+					</select>
+				</label>
+				{#each uniqueValues as value}
+					<label class="flex items-center space-x-2">
+						<input class="checkbox" type="checkbox" {value} />
+						<p>{value}</p>
+					</label>
+				{/each}
+			</form>
+			<p>Select Sample Percentage</p>
+			<Slider
+				name="sample-percentage-input"
+				{value}
+				onValueChange={(e) => (value = e.value)}
+				markers={[10, 25, 50, 75, 90]}
+			/>
+			<p class="p opacity-60">Current: {value[0]}%</p>
 		{/snippet}
 	</FileUploadHandler>
 </div>
