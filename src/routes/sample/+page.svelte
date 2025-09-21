@@ -28,8 +28,8 @@
 		);
 
 		uniqueValues = newUniqueValues;
-		console.log(uniqueValues)
-		console.log(newUniqueValues)
+		console.log(uniqueValues);
+		console.log(newUniqueValues);
 		columns = jsondata.meta.fields;
 	};
 </script>
