@@ -16,10 +16,12 @@
 				if (!header && index === 0) {
 					return 'ID';
 				}
+				if (!header) {
+					return `FIELD-${index}`;
+				}
 				return header;
 			}
 		});
-		console.log(jsondata);
 
 		const newUniqueValues = new Set<string>();
 
@@ -28,9 +30,7 @@
 		);
 
 		uniqueValues = newUniqueValues;
-		console.log(uniqueValues);
-		console.log(newUniqueValues);
-		columns = jsondata.meta.fields;
+		columns = jsondata.meta.fields!;
 	};
 </script>
 
@@ -63,6 +63,10 @@
 				markers={[10, 25, 50, 75, 90]}
 			/>
 			<p class="p opacity-60">Current: {value[0]}%</p>
+			<label>
+				<input class="checkbox" type="checkbox" />
+				<p>Merge Original Data?</p>
+			</label>
 		{/snippet}
 	</FileUploadHandler>
 </div>

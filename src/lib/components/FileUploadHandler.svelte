@@ -18,6 +18,7 @@
 		additions?: Snippet;
 		label?: string;
 		name: string;
+		onFileUpload?: (files: File[]) => void;
 		processFile: (file: File) => Promise<any>;
 	}
 
@@ -25,6 +26,7 @@
 		additions,
 		label = 'Click or drag and drop files here (accepts .csv, xls, xlsx).',
 		name,
+		onFileUpload = () => {},
 		processFile
 	}: FileUploadHandlerProps = $props();
 
@@ -39,6 +41,7 @@
 				processingState: 'pending'
 			};
 		});
+		onFileUpload(fileChanges.acceptedFiles);
 	};
 
 	const onFileRejection = (details: FileRejectDetails) => {
