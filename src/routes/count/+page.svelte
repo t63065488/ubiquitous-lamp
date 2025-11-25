@@ -64,11 +64,25 @@
 		});
 		return counts;
 	};
+
+	const onDownload = (data: any) => {
+		console.log(data);
+		const unparsed = Papa.unparse(data);
+		const blob = new Blob([unparsed], { type: 'text/csv;charset=utf-8;' });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = `processed-data.csv`;
+		link.click();
+
+		// Clean up the object URL
+		URL.revokeObjectURL(url);
+	};
 </script>
 
 <div class="w-full card preset-filled-surface-100-900 p-4">
 	<h2 class="pb-4 h2">Count Data</h2>
-	<FileUploadHandler name="Count" {processFile} {onFileUpload}>
+	<FileUploadHandler name="Count" {processFile} {onFileUpload} {onDownload}>
 		{#snippet additions()}
 			{#if columns.size > 0}
 				<label class="label">

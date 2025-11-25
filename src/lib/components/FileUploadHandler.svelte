@@ -3,7 +3,15 @@
 	import type { Snippet } from 'svelte';
 
 	import { toaster } from '$lib/toaster-svelte';
-	import { Check, CircleX, File as FileIcon, FilePlus, Hourglass, X } from '@lucide/svelte';
+	import {
+		ArrowDownIcon,
+		Check,
+		CircleX,
+		File as FileIcon,
+		FilePlus,
+		Hourglass,
+		X
+	} from '@lucide/svelte';
 	import { FileUpload, ProgressRing } from '@skeletonlabs/skeleton-svelte';
 	import { v4 as uuidv4 } from 'uuid';
 
@@ -19,6 +27,7 @@
 		label?: string;
 		name: string;
 		onFileUpload?: (files: File[]) => void;
+		onDownload?: (data: any) => void;
 		processFile: (file: File) => Promise<any>;
 	}
 
@@ -27,10 +36,12 @@
 		label = 'Click or drag and drop files here (accepts .csv, xls, xlsx).',
 		name,
 		onFileUpload = () => {},
-		processFile
+		processFile,
+		onDownload = () => {}
 	}: FileUploadHandlerProps = $props();
 
 	let files: FileTableEntry[] = $state([]);
+	let fileTracker: { [id: string]: any } = $state({});
 
 	const populateFiles = (fileChanges: FileChangeDetails) => {
 		files = fileChanges.acceptedFiles.map((file): FileTableEntry => {
@@ -59,6 +70,7 @@
 			processFile(file.file)
 				.then((value) => {
 					file.processingState = 'processed';
+					fileTracker[file.id] = value;
 				})
 				.catch((error) => {
 					console.error(error);
@@ -119,7 +131,13 @@
 							{/if}
 						</td>
 						<td>
-							<p class="text-left opacity-60">N/A</p>
+							<button
+								type="button"
+								class="btn-icon preset-filled"
+								title="Download"
+								disabled={row.processingState !== 'processed'}
+								onclick={() => onDownload(fileTracker[row.id])}><ArrowDownIcon size={18} /></button
+							>
 						</td>
 					</tr>
 				{/each}
@@ -137,6 +155,7 @@
 							type="button"
 							class="btn preset-filled"
 							disabled={!files.some((file) => file.processingState === 'processed')}
+							onclick={() => Object.keys(fileTracker).forEach((key) => onDownload(fileTracker[key]))}
 							>Download All</button
 						>
 					</td>
