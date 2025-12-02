@@ -2,17 +2,8 @@
 	import type { FileChangeDetails, FileRejectDetails } from '@zag-js/file-upload';
 	import type { Snippet } from 'svelte';
 
-	import { toaster } from '$lib/toaster-svelte';
-	import {
-		ArrowDownIcon,
-		Check,
-		CircleX,
-		File as FileIcon,
-		FilePlus,
-		Hourglass,
-		X
-	} from '@lucide/svelte';
-	import { FileUpload, ProgressRing } from '@skeletonlabs/skeleton-svelte';
+	import { ArrowDownIcon, Check, File as FileIcon, Hourglass, X } from '@lucide/svelte';
+	import { FileUpload, Progress } from '@skeletonlabs/skeleton-svelte';
 	import { v4 as uuidv4 } from 'uuid';
 
 	interface FileTableEntry {
@@ -26,8 +17,8 @@
 		additions?: Snippet;
 		label?: string;
 		name: string;
-		onFileUpload?: (files: File[]) => void;
 		onDownload?: (data: any) => void;
+		onFileUpload?: (files: File[]) => void;
 		processFile: (file: File) => Promise<any>;
 	}
 
@@ -35,9 +26,9 @@
 		additions,
 		label = 'Click or drag and drop files here (accepts .csv, xls, xlsx).',
 		name,
+		onDownload = () => {},
 		onFileUpload = () => {},
-		processFile,
-		onDownload = () => {}
+		processFile
 	}: FileUploadHandlerProps = $props();
 
 	let files: FileTableEntry[] = $state([]);
@@ -56,7 +47,7 @@
 	};
 
 	const onFileRejection = (details: FileRejectDetails) => {
-		toaster.error({
+		console.error({
 			description:
 				'There was an error uploading chosen files. \n' +
 				details.files.map((file) => file.file.name + ': ' + file.errors).join('\n'),
@@ -83,7 +74,6 @@
 <div class="space-y-4">
 	<FileUpload
 		{name}
-		{label}
 		onFileChange={populateFiles}
 		onFileReject={onFileRejection}
 		accept={[
@@ -93,15 +83,27 @@
 		]}
 		maxFiles={Infinity}
 	>
-		{#snippet iconInterface()}
-			<FilePlus class="size-4" />
-		{/snippet}
-		{#snippet iconFile()}
-			<FileIcon class="size-4" />
-		{/snippet}
-		{#snippet iconFileRemove()}
-			<CircleX class="size-4" />
-		{/snippet}
+		<FileUpload.Label>{label}</FileUpload.Label>
+		<FileUpload.Dropzone>
+			<FileIcon class="size-10" />
+			<span>Select file or drag here.</span>
+			<FileUpload.Trigger>Browse Files</FileUpload.Trigger>
+			<FileUpload.HiddenInput />
+		</FileUpload.Dropzone>
+		<FileUpload.ItemGroup>
+			<FileUpload.Context>
+				{#snippet children(fileUpload)}
+					{#each fileUpload().acceptedFiles as file (file.name)}
+						<FileUpload.Item {file}>
+							<FileUpload.ItemName>{file.name}</FileUpload.ItemName>
+							<FileUpload.ItemSizeText>{file.size} bytes</FileUpload.ItemSizeText>
+							<FileUpload.ItemDeleteTrigger />
+						</FileUpload.Item>
+					{/each}
+				{/snippet}
+			</FileUpload.Context>
+		</FileUpload.ItemGroup>
+		<FileUpload.ClearTrigger>Clear Files</FileUpload.ClearTrigger>
 	</FileUpload>
 	{#if files.length !== 0}
 		<hr class="hr border-t-2" />
@@ -123,7 +125,7 @@
 							{#if row.processingState === 'pending'}
 								<Hourglass />
 							{:else if row.processingState === 'processing'}
-								<ProgressRing value={null} size="size-6" />
+								<Progress value={null} size="size-6" />
 							{:else if row.processingState === 'processed'}
 								<Check color="green" />
 							{:else if row.processingState === 'error'}
@@ -155,7 +157,8 @@
 							type="button"
 							class="btn preset-filled"
 							disabled={!files.some((file) => file.processingState === 'processed')}
-							onclick={() => Object.keys(fileTracker).forEach((key) => onDownload(fileTracker[key]))}
+							onclick={() =>
+								Object.keys(fileTracker).forEach((key) => onDownload(fileTracker[key]))}
 							>Download All</button
 						>
 					</td>
