@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { toaster } from '$lib/toaster-svelte';
 	import { LampDesk, Layers, Settings, SwatchBook } from '@lucide/svelte';
 	import { Navigation, Toast } from '@skeletonlabs/skeleton-svelte';
 	let { children } = $props();
@@ -22,8 +21,6 @@
 	let anchorRail =
 		'btn hover:preset-tonal aspect-square w-full max-w-[84px] flex flex-col items-center gap-0.5';
 </script>
-
-<Toast.Group {toaster} />
 
 <svelte:head>
 	<link rel="icon" href={favicon} />

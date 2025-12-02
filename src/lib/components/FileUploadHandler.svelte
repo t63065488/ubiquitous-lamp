@@ -2,7 +2,6 @@
 	import type { FileChangeDetails, FileRejectDetails } from '@zag-js/file-upload';
 	import type { Snippet } from 'svelte';
 
-	import { toaster } from '$lib/toaster-svelte';
 	import { ArrowDownIcon, Check, File as FileIcon, Hourglass, X } from '@lucide/svelte';
 	import { FileUpload, Progress } from '@skeletonlabs/skeleton-svelte';
 	import { v4 as uuidv4 } from 'uuid';
@@ -48,7 +47,7 @@
 	};
 
 	const onFileRejection = (details: FileRejectDetails) => {
-		toaster.error({
+		console.error({
 			description:
 				'There was an error uploading chosen files. \n' +
 				details.files.map((file) => file.file.name + ': ' + file.errors).join('\n'),
