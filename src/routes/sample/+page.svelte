@@ -8,6 +8,8 @@
 	let columns: string[] = $state([]);
 	let uniqueValues: Set<string> = $state(new Set<string>());
 
+	const markers: number[] = [10, 25, 50, 75, 90];
+
 	const processFile = async (file: File) => {
 		const jsondata = Papa.parse(await file.text(), {
 			header: true,
@@ -55,13 +57,27 @@
 					</label>
 				{/each}
 			</form>
-			<p>Select Sample Percentage</p>
 			<Slider
 				name="sample-percentage-input"
 				{value}
 				onValueChange={(e) => (value = e.value)}
-				markers={[10, 25, 50, 75, 90]}
-			/>
+				defaultValue={[10]}
+			>
+				<Slider.Label>Select Sample Percentage</Slider.Label>
+				<Slider.Control>
+					<Slider.Track>
+						<Slider.Range />
+					</Slider.Track>
+					<Slider.Thumb index={0}>
+						<Slider.HiddenInput />
+					</Slider.Thumb>
+				</Slider.Control>
+				<Slider.MarkerGroup>
+					{#each markers as marker}
+						<Slider.Marker value={marker} />
+					{/each}
+				</Slider.MarkerGroup>
+			</Slider>
 			<p class="p opacity-60">Current: {value[0]}%</p>
 			<label>
 				<input class="checkbox" type="checkbox" />
