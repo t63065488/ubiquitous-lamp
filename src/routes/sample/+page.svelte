@@ -1,14 +1,46 @@
 <script lang="ts">
 	import FileUploadHandler from '$lib/components/FileUploadHandler.svelte';
-	import { Slider } from '@skeletonlabs/skeleton-svelte';
+	import { defaultHeaderTransform } from '$lib/utils/parse';
+	import { Listbox, Slider, useListCollection } from '@skeletonlabs/skeleton-svelte';
 	import Papa from 'papaparse';
 
 	let value: number[] = $state([10]);
 
-	let columns: string[] = $state([]);
+	let columns: Set<string> = $state(new Set());
+	let selectedColumn: string = $state("")
 	let uniqueValues: Set<string> = $state(new Set<string>());
 
 	const markers: number[] = [10, 25, 50, 75, 90];
+
+	const onFileUpload = (files: File[]) => {
+		const newColumns = new Set<string>();
+		files.map((file) =>
+			Papa.parse<File>(file, {
+				complete: (results) => {
+					results.meta.fields?.forEach((field) => newColumns.add(field));
+					columns = newColumns;
+				},
+				header: true,
+				skipEmptyLines: true,
+				transform() {
+					return null;
+				},
+				transformHeader(header, index) {
+					return defaultHeaderTransform(header, index);
+				}
+			})
+		);
+	};
+
+	let query = $state('');
+
+	const collection = $derived(
+		useListCollection({
+			items: [...uniqueValues].filter((item) => item.toLowerCase().includes(query.toLowerCase())),
+			itemToString: (item) => item,
+			itemToValue: (item) => item
+		})
+	);
 
 	const processFile = async (file: File) => {
 		const jsondata = Papa.parse(await file.text(), {
@@ -32,30 +64,43 @@
 		);
 
 		uniqueValues = newUniqueValues;
-		columns = jsondata.meta.fields!;
 	};
+
+	const onColumnSelect = (event: any) => {
+		console.log(event)
+	}
 </script>
 
 <div>
 	<h2 class="pb-4 h2">Sample Data</h2>
-	<FileUploadHandler name="Count" {processFile}>
+	<FileUploadHandler name="Count" {processFile} {onFileUpload}>
 		{#snippet additions()}
 			<form class="mx-auto w-full max-w-md space-y-4">
 				<!-- Default -->
 				<label class="label">
 					<span class="label-text">Select Column to Sample</span>
-					<select class="select">
+					<select class="select" onchange={onColumnSelect} bind:value={selectedColumn}>
 						{#each columns as column (column)}
 							<option value={column}>{column}</option>
 						{/each}
 					</select>
 				</label>
-				{#each uniqueValues as value}
-					<label class="flex items-center space-x-2">
-						<input class="checkbox" type="checkbox" {value} />
-						<p>{value}</p>
-					</label>
-				{/each}
+				<Listbox class="w-full max-w-md" {collection}>
+					<Listbox.Label>Search for Values</Listbox.Label>
+					<Listbox.Input
+						placeholder="Type to search..."
+						value={query}
+						oninput={(e) => (query = e.currentTarget.value)}
+					/>
+					<Listbox.Content>
+						{#each collection.items as item (item)}
+							<Listbox.Item {item}>
+								<Listbox.ItemText>{item}</Listbox.ItemText>
+								<Listbox.ItemIndicator />
+							</Listbox.Item>
+						{/each}
+					</Listbox.Content>
+				</Listbox>
 			</form>
 			<Slider
 				name="sample-percentage-input"
