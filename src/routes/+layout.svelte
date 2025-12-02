@@ -55,7 +55,9 @@
 		</aside>
 
 		<main class="flex justify-center space-y-4 p-4">
-			{@render children?.()}
+			<div class="w-full card preset-filled-surface-100-900 p-4">
+				{@render children?.()}
+			</div>
 		</main>
 	</div>
 </div>

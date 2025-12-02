@@ -1,7 +1,4 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/forms';
-
-@import '@skeletonlabs/skeleton';
-@import '@skeletonlabs/skeleton/themes/mint';
-
 @import '@skeletonlabs/skeleton-svelte';
+@import '@skeletonlabs/skeleton';
+@import '@skeletonlabs/skeleton/themes/nosh';

@@ -36,7 +36,7 @@
 	};
 </script>
 
-<div class="w-full card preset-filled-surface-100-900 p-4">
+<div>
 	<h2 class="pb-4 h2">Sample Data</h2>
 	<FileUploadHandler name="Count" {processFile}>
 		{#snippet additions()}
