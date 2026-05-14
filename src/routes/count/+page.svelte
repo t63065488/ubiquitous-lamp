@@ -80,6 +80,10 @@
 	};
 </script>
 
+<svelte:head>
+	<title>Count Data - Ubiquitous Lamp</title>
+</svelte:head>
+
 <div>
 	<h2 class="pb-4 h2">Count Data</h2>
 	<FileUploadHandler name="Count" {processFile} {onFileUpload} {onDownload}>

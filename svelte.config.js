@@ -1,12 +1,10 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-auto';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter({
-			fallback: 'index.html'
-		}),
+		adapter: adapter(),
 		paths: {
 			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
 		}

@@ -7,7 +7,7 @@
 	let value: number[] = $state([10]);
 
 	let columns: Set<string> = $state(new Set());
-	let selectedColumn: string = $state("")
+	let selectedColumn: string = $state('');
 	let uniqueValues: Set<string> = $state(new Set<string>());
 
 	const markers: number[] = [10, 25, 50, 75, 90];
@@ -67,9 +67,13 @@
 	};
 
 	const onColumnSelect = (event: any) => {
-		console.log(event)
-	}
+		console.log(event);
+	};
 </script>
+
+<svelte:head>
+	<title>Sample Data - Ubiquitous Lamp</title>
+</svelte:head>
 
 <div>
 	<h2 class="pb-4 h2">Sample Data</h2>
