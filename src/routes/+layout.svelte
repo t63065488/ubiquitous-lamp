@@ -1,11 +1,13 @@
 <script lang="ts">
 	import '../app.css';
+	import type { Component } from 'svelte';
+
 	import favicon from '$lib/assets/favicon.svg';
 	import { LampDesk, Layers, Settings, SwatchBook } from '@lucide/svelte';
-	import { Navigation, Toast } from '@skeletonlabs/skeleton-svelte';
+	import { Navigation } from '@skeletonlabs/skeleton-svelte';
 	let { children } = $props();
 
-	const links: { href: string; icon: any; label: string }[] = [
+	const links: { href: string; icon: Component; label: string }[] = [
 		{
 			href: 'count',
 			icon: SwatchBook,
@@ -37,7 +39,7 @@
 				</Navigation.Header>
 				<Navigation.Content>
 					<Navigation.Menu>
-						{#each links as link}
+						{#each links as link (link.href)}
 							{@const Icon = link.icon}
 							<a href={link.href} class={anchorRail}>
 								<Icon class="size-5" />

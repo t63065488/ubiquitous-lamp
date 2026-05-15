@@ -3,17 +3,18 @@
 	import { defaultHeaderTransform } from '$lib/utils/parse';
 	import { Listbox, Slider, useListCollection } from '@skeletonlabs/skeleton-svelte';
 	import Papa from 'papaparse';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let value: number[] = $state([10]);
 
-	let columns: Set<string> = $state(new Set());
+	let columns = $state(new SvelteSet<string>());
 	let selectedColumn: string = $state('');
-	let uniqueValues: Set<string> = $state(new Set<string>());
+	let uniqueValues = $state(new SvelteSet<string>());
 
 	const markers: number[] = [10, 25, 50, 75, 90];
 
 	const onFileUpload = (files: File[]) => {
-		const newColumns = new Set<string>();
+		const newColumns = new SvelteSet<string>();
 		files.map((file) =>
 			Papa.parse<File>(file, {
 				complete: (results) => {
@@ -57,7 +58,7 @@
 			}
 		});
 
-		const newUniqueValues = new Set<string>();
+		const newUniqueValues = new SvelteSet<string>();
 
 		jsondata.data.forEach((element: { [key: string]: string }) =>
 			newUniqueValues.add(element['AUTO ID*'])
@@ -66,7 +67,7 @@
 		uniqueValues = newUniqueValues;
 	};
 
-	const onColumnSelect = (event: any) => {
+	const onColumnSelect = (event: Event) => {
 		console.log(event);
 	};
 </script>
@@ -122,7 +123,7 @@
 					</Slider.Thumb>
 				</Slider.Control>
 				<Slider.MarkerGroup>
-					{#each markers as marker}
+					{#each markers as marker (marker)}
 						<Slider.Marker value={marker} />
 					{/each}
 				</Slider.MarkerGroup>

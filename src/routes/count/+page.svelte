@@ -2,13 +2,14 @@
 	import FileUploadHandler from '$lib/components/FileUploadHandler.svelte';
 	import { defaultHeaderTransform, getUniqueValues } from '$lib/utils/parse';
 	import Papa from 'papaparse';
+	import { SvelteSet } from 'svelte/reactivity';
 
-	let columns: Set<string> = $state(new Set());
+	let columns = $state(new SvelteSet<string>());
 	let groupBy: null | string = $state(null);
 	let countColumn: null | string = $state(null);
 
 	const onFileUpload = (files: File[]) => {
-		const newColumns = new Set<string>();
+		const newColumns = new SvelteSet<string>();
 		files.map((file) =>
 			Papa.parse<File>(file, {
 				complete: (results) => {
@@ -65,7 +66,7 @@
 		return counts;
 	};
 
-	const onDownload = (data: any) => {
+	const onDownload = (data: unknown) => {
 		console.log(data);
 		const unparsed = Papa.unparse(data);
 		const blob = new Blob([unparsed], { type: 'text/csv;charset=utf-8;' });

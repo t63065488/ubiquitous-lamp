@@ -17,9 +17,9 @@
 		additions?: Snippet;
 		label?: string;
 		name: string;
-		onDownload?: (data: any) => void;
+		onDownload?: (data: unknown) => void;
 		onFileUpload?: (files: File[]) => void;
-		processFile: (file: File) => Promise<any>;
+		processFile: (file: File) => Promise<unknown>;
 	}
 
 	const {
@@ -32,7 +32,7 @@
 	}: FileUploadHandlerProps = $props();
 
 	let files: FileTableEntry[] = $state([]);
-	let fileTracker: { [id: string]: any } = $state({});
+	let fileTracker: { [id: string]: unknown } = $state({});
 
 	const populateFiles = (fileChanges: FileChangeDetails) => {
 		files = fileChanges.acceptedFiles.map((file): FileTableEntry => {
