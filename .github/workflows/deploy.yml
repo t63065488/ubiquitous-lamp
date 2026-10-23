@@ -3,6 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: 'main'
+  pull_request:
 
 jobs:
   build_site:
@@ -14,11 +15,23 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm i
+        run: npm ci
+
+      - name: Check
+        run: npm run check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Test
+        run: npm test
 
       - name: build
         env:
@@ -27,11 +40,13 @@ jobs:
           npm run build
 
       - name: Upload Artifacts
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: 'build/'
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build_site
     runs-on: ubuntu-latest
 

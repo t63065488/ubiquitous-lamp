@@ -1,90 +1,68 @@
 <script lang="ts">
 	import FileUploadHandler from '$lib/components/FileUploadHandler.svelte';
-	import { defaultHeaderTransform, getUniqueValues } from '$lib/utils/parse';
-	import Papa from 'papaparse';
+	import { downloadCsv, fileStem } from '$lib/utils/download';
+	import { countValues, type Row } from '$lib/utils/parse';
+	import { parseFile, readColumns } from '$lib/utils/tabular';
 
-	let columns: Set<string> = $state(new Set());
+	let columns: string[] = $state([]);
 	let groupBy: null | string = $state(null);
 	let countColumn: null | string = $state(null);
+	let latestUpload = 0;
 
-	const onFileUpload = (files: File[]) => {
-		const newColumns = new Set<string>();
-		files.map((file) =>
-			Papa.parse<File>(file, {
-				complete: (results) => {
-					results.meta.fields?.forEach((field) => newColumns.add(field));
-					columns = newColumns;
-				},
-				header: true,
-				skipEmptyLines: true,
-				transform() {
-					return null;
-				},
-				transformHeader(header, index) {
-					return defaultHeaderTransform(header, index);
-				}
-			})
-		);
+	const onFileUpload = async (files: File[]) => {
+		const upload = ++latestUpload;
+		let newColumns: string[] = [];
+		try {
+			newColumns = await readColumns(files);
+		} catch (error) {
+			console.error(error);
+		}
+		// Ignore results from a selection that has since been replaced
+		if (upload !== latestUpload) {
+			return;
+		}
+
+		columns = newColumns;
+		if (!countColumn || !columns.includes(countColumn)) {
+			countColumn = columns[0] ?? null;
+		}
+		if (groupBy && !columns.includes(groupBy)) {
+			groupBy = null;
+		}
 	};
 
 	const processFile = async (file: File) => {
-		const fileText = await file.text();
-		const parsed: { [key: string]: string }[] = Papa.parse(fileText, {
-			header: true,
-			skipEmptyLines: true,
-			transformHeader(header, index) {
-				return defaultHeaderTransform(header, index);
-			}
-		}).data as { [key: string]: string }[];
-
-		if (groupBy) {
-			const uniqueValues = getUniqueValues(parsed, groupBy);
-			const results: { [key: string]: { [key: string]: number } } = {};
-			uniqueValues.forEach((value) => {
-				results[value] = getCountsWithFilter(
-					parsed,
-					(row) => row[groupBy!] === value,
-					countColumn!
-				);
-			});
-			return results;
+		if (!countColumn) {
+			throw new Error('Select a column to count before processing.');
 		}
-
-		return getCountsWithFilter(parsed, () => true, countColumn!);
+		const { rows } = await parseFile(file);
+		return countValues(rows, countColumn, groupBy ?? undefined);
 	};
 
-	const getCountsWithFilter = (
-		data: { [key: string]: string }[],
-		filter: (row: { [key: string]: string }, index: number) => boolean,
-		key: string
-	) => {
-		const counts: { [key: string]: number } = {};
-		data.filter(filter).forEach((row) => {
-			counts[row[key]] = counts[row[key]] ? counts[row[key]] + 1 : 1;
-		});
-		return counts;
-	};
-
-	const onDownload = (data: any) => {
-		console.log(data);
-		const unparsed = Papa.unparse(data);
-		const blob = new Blob([unparsed], { type: 'text/csv;charset=utf-8;' });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `processed-data.csv`;
-		link.click();
-
-		// Clean up the object URL
-		URL.revokeObjectURL(url);
+	const onDownload = (rows: Row[], fileName: string) => {
+		downloadCsv(rows, `${fileStem(fileName)}-counts.csv`);
 	};
 </script>
 
-<div>
-	<h2 class="pb-4 h2">Count Data</h2>
-	<FileUploadHandler name="Count" {processFile} {onFileUpload} {onDownload}>
+<svelte:head>
+	<title>Count Data - Ubiquitous Lamp</title>
+</svelte:head>
+
+<div class="space-y-4">
+	<h2 class="h2">Count Data</h2>
+	<p class="card preset-outlined-surface-200-800 p-4 text-sm">
+		Upload CSV or Excel files, choose a column to count occurrences of each value, and optionally
+		group the counts by another column. Each processed file downloads as a CSV of value counts.
+	</p>
+	<FileUploadHandler
+		name="Count"
+		canProcess={!!countColumn}
+		{processFile}
+		{onFileUpload}
+		{onDownload}
+	>
 		{#snippet additions()}
-			{#if columns.size > 0}
+			{#if columns.length > 0}
 				<label class="label">
 					<span class="label-text">Select Column to Count</span>
 					<select bind:value={countColumn} class="select">
@@ -96,6 +74,7 @@
 				<label class="label">
 					<span class="label-text">Group By</span>
 					<select bind:value={groupBy} class="select">
+						<option value={null}>None</option>
 						{#each columns as column (column)}
 							<option value={column}>{column}</option>
 						{/each}

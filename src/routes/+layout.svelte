@@ -1,18 +1,23 @@
 <script lang="ts">
-	import '../app.css';
+	import type { Component } from 'svelte';
+
+	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
-	import { LampDesk, Layers, Settings, SwatchBook } from '@lucide/svelte';
-	import { Navigation, Toast } from '@skeletonlabs/skeleton-svelte';
+	import { LampDesk, Layers, SwatchBook } from '@lucide/svelte';
+	import { Navigation } from '@skeletonlabs/skeleton-svelte';
+
+	import '../app.css';
+
 	let { children } = $props();
 
-	const links: { href: string; icon: any; label: string }[] = [
+	const links: { href: '/count' | '/sample'; icon: Component; label: string }[] = [
 		{
-			href: 'count',
+			href: '/count',
 			icon: SwatchBook,
 			label: 'Count'
 		},
 		{
-			href: 'sample',
+			href: '/sample',
 			icon: Layers,
 			label: 'Sample'
 		}
@@ -31,26 +36,21 @@
 		<aside class="h-screen w-full">
 			<Navigation layout="rail">
 				<Navigation.Header>
-					<a href="/" title="Home Page" aria-label="Homepage" class={anchorRail}>
+					<a href={resolve('/')} title="Home Page" aria-label="Homepage" class={anchorRail}>
 						<LampDesk class="size-8" />
 					</a>
 				</Navigation.Header>
 				<Navigation.Content>
 					<Navigation.Menu>
-						{#each links as link}
+						{#each links as link (link.href)}
 							{@const Icon = link.icon}
-							<a href={link.href} class={anchorRail}>
+							<a href={resolve(link.href)} class={anchorRail}>
 								<Icon class="size-5" />
 								<span class="text-xs">{link.label}</span>
 							</a>
 						{/each}
 					</Navigation.Menu>
 				</Navigation.Content>
-				<Navigation.Footer>
-					<a href="/" class={anchorRail} title="Settings" aria-label="Settings">
-						<Settings className="size-5" />
-					</a>
-				</Navigation.Footer>
 			</Navigation>
 		</aside>
 

@@ -1,10 +1,10 @@
 <script lang="ts">
+	import type { Row } from '$lib/utils/parse';
 	import type { FileChangeDetails, FileRejectDetails } from '@zag-js/file-upload';
 	import type { Snippet } from 'svelte';
 
 	import { ArrowDownIcon, Check, File as FileIcon, Hourglass, X } from '@lucide/svelte';
 	import { FileUpload, Progress } from '@skeletonlabs/skeleton-svelte';
-	import { v4 as uuidv4 } from 'uuid';
 
 	interface FileTableEntry {
 		file: File;
@@ -15,15 +15,17 @@
 
 	interface FileUploadHandlerProps {
 		additions?: Snippet;
+		canProcess?: boolean;
 		label?: string;
 		name: string;
-		onDownload?: (data: any) => void;
+		onDownload?: (rows: Row[], fileName: string) => void;
 		onFileUpload?: (files: File[]) => void;
-		processFile: (file: File) => Promise<any>;
+		processFile: (file: File) => Promise<Row[]>;
 	}
 
 	const {
 		additions,
+		canProcess = true,
 		label = 'Click or drag and drop files here (accepts .csv, xls, xlsx).',
 		name,
 		onDownload = () => {},
@@ -32,30 +34,38 @@
 	}: FileUploadHandlerProps = $props();
 
 	let files: FileTableEntry[] = $state([]);
-	let fileTracker: { [id: string]: any } = $state({});
+	let fileTracker: { [id: string]: Row[] } = $state({});
+	let rejectionMessage: null | string = $state(null);
 
 	const populateFiles = (fileChanges: FileChangeDetails) => {
-		files = fileChanges.acceptedFiles.map((file): FileTableEntry => {
-			return {
-				file: file,
-				id: uuidv4(),
-				name: file.name,
-				processingState: 'pending'
-			};
-		});
+		// Keep existing entries (and their processed results) for files that are still selected
+		files = fileChanges.acceptedFiles.map(
+			(file): FileTableEntry =>
+				files.find((entry) => entry.file === file) ?? {
+					file: file,
+					id: crypto.randomUUID(),
+					name: file.name,
+					processingState: 'pending'
+				}
+		);
+		const ids = new Set(files.map((file) => file.id));
+		Object.keys(fileTracker)
+			.filter((id) => !ids.has(id))
+			.forEach((id) => delete fileTracker[id]);
+		rejectionMessage = null;
 		onFileUpload(fileChanges.acceptedFiles);
 	};
 
 	const onFileRejection = (details: FileRejectDetails) => {
-		console.error({
-			description:
-				'There was an error uploading chosen files. \n' +
-				details.files.map((file) => file.file.name + ': ' + file.errors).join('\n'),
-			title: 'Error'
-		});
+		if (details.files.length === 0) {
+			return;
+		}
+		rejectionMessage =
+			'Some files could not be added: ' +
+			details.files.map(({ errors, file }) => `${file.name} (${errors.join(', ')})`).join('; ');
 	};
 
-	const processAllFiles = async () => {
+	const processAllFiles = () => {
 		files.forEach((file) => {
 			file.processingState = 'processing';
 			processFile(file.file)
@@ -69,6 +79,12 @@
 				});
 		});
 	};
+
+	const downloadAll = () => {
+		files
+			.filter((file) => file.processingState === 'processed')
+			.forEach((file) => onDownload(fileTracker[file.id], file.name));
+	};
 </script>
 
 <div class="space-y-4">
@@ -76,11 +92,11 @@
 		{name}
 		onFileChange={populateFiles}
 		onFileReject={onFileRejection}
-		accept={[
-			'text/csv',
-			'application/vnd.ms-excel',
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-		]}
+		accept={{
+			'application/vnd.ms-excel': ['.xls'],
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+			'text/csv': ['.csv']
+		}}
 		maxFiles={Infinity}
 	>
 		<FileUpload.Label>{label}</FileUpload.Label>
@@ -93,7 +109,7 @@
 		<FileUpload.ItemGroup>
 			<FileUpload.Context>
 				{#snippet children(fileUpload)}
-					{#each fileUpload().acceptedFiles as file (file.name)}
+					{#each fileUpload().acceptedFiles as file (file)}
 						<FileUpload.Item {file}>
 							<FileUpload.ItemName>{file.name}</FileUpload.ItemName>
 							<FileUpload.ItemSizeText>{file.size} bytes</FileUpload.ItemSizeText>
@@ -105,6 +121,9 @@
 		</FileUpload.ItemGroup>
 		<FileUpload.ClearTrigger>Clear Files</FileUpload.ClearTrigger>
 	</FileUpload>
+	{#if rejectionMessage}
+		<p class="card preset-tonal-error p-4" role="alert">{rejectionMessage}</p>
+	{/if}
 	{#if files.length !== 0}
 		<hr class="hr border-t-2" />
 		{@render additions?.()}
@@ -125,7 +144,12 @@
 							{#if row.processingState === 'pending'}
 								<Hourglass />
 							{:else if row.processingState === 'processing'}
-								<Progress value={null} size="size-6" />
+								<Progress value={null}>
+									<Progress.Circle class="[--size:--spacing(6)]">
+										<Progress.CircleTrack />
+										<Progress.CircleRange />
+									</Progress.Circle>
+								</Progress>
 							{:else if row.processingState === 'processed'}
 								<Check color="green" />
 							{:else if row.processingState === 'error'}
@@ -138,7 +162,8 @@
 								class="btn-icon preset-filled"
 								title="Download"
 								disabled={row.processingState !== 'processed'}
-								onclick={() => onDownload(fileTracker[row.id])}><ArrowDownIcon size={18} /></button
+								onclick={() => onDownload(fileTracker[row.id], row.name)}
+								><ArrowDownIcon size={18} /></button
 							>
 						</td>
 					</tr>
@@ -150,16 +175,14 @@
 						<button
 							type="button"
 							class="btn preset-filled"
-							disabled={files.some((file) => file.processingState === 'processing')}
-							onclick={() => processAllFiles()}>Process All</button
+							disabled={!canProcess || files.some((file) => file.processingState === 'processing')}
+							onclick={processAllFiles}>Process All</button
 						>
 						<button
 							type="button"
 							class="btn preset-filled"
 							disabled={!files.some((file) => file.processingState === 'processed')}
-							onclick={() =>
-								Object.keys(fileTracker).forEach((key) => onDownload(fileTracker[key]))}
-							>Download All</button
+							onclick={downloadAll}>Download All</button
 						>
 					</td>
 				</tr>
