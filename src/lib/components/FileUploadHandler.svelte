@@ -1,10 +1,11 @@
 <script lang="ts">
-	import type { Row } from '$lib/utils/parse';
 	import type { FileChangeDetails, FileRejectDetails } from '@zag-js/file-upload';
 	import type { Snippet } from 'svelte';
 
 	import { ArrowDownIcon, Check, File as FileIcon, Hourglass, X } from '@lucide/svelte';
 	import { FileUpload, Progress } from '@skeletonlabs/skeleton-svelte';
+
+	import type { Row } from '#lib/utils/parse.js';
 
 	interface FileTableEntry {
 		file: File;

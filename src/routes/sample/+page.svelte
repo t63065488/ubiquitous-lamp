@@ -1,9 +1,10 @@
 <script lang="ts">
-	import FileUploadHandler from '$lib/components/FileUploadHandler.svelte';
-	import { downloadCsv, fileStem } from '$lib/utils/download';
-	import { getUniqueValues, type Row, sampleRows } from '$lib/utils/parse';
-	import { type ParsedFile, parseFile } from '$lib/utils/tabular';
 	import { Listbox, Slider, useListCollection } from '@skeletonlabs/skeleton-svelte';
+
+	import FileUploadHandler from '#lib/components/FileUploadHandler.svelte';
+	import { downloadCsv, fileStem } from '#lib/utils/download.js';
+	import { getUniqueValues, type Row, sampleRows } from '#lib/utils/parse.js';
+	import { type ParsedFile, parseFile } from '#lib/utils/tabular.js';
 
 	// Listbox values must be non-empty, so blank cells are represented by a sentinel
 	const BLANK_VALUE = '\u0000';

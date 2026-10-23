@@ -61,10 +61,10 @@ Pushes to `main` deploy to GitHub Pages through [.github/workflows/deploy.yml](.
 
 ## Stack
 
-- [SvelteKit 2](https://svelte.dev/docs/kit) and [Svelte 5](https://svelte.dev/docs/svelte) (runes), using `adapter-static`
-- [Skeleton v4](https://www.skeleton.dev/) on [Tailwind CSS 4](https://tailwindcss.com/)
+- [SvelteKit 3](https://svelte.dev/docs/kit) and [Svelte 5](https://svelte.dev/docs/svelte) (runes), using `adapter-static`
+- [Skeleton v5](https://www.skeleton.dev/) on [Tailwind CSS 4](https://tailwindcss.com/)
 - [PapaParse](https://www.papaparse.com/) for CSV and [SheetJS](https://sheetjs.com/) for Excel
-- [Vitest 4](https://vitest.dev/) with Playwright browser mode
+- [Vitest 5](https://vitest.dev/) with Playwright browser mode
 
 > [!NOTE]
 > SheetJS is installed from the SheetJS CDN tarball, not the npm registry. The `xlsx` package on npm is outdated and has known vulnerabilities, so don't run `npm i xlsx`.

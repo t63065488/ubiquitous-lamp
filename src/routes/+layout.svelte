@@ -2,9 +2,10 @@
 	import type { Component } from 'svelte';
 
 	import { resolve } from '$app/paths';
-	import favicon from '$lib/assets/favicon.svg';
 	import { LampDesk, Layers, SwatchBook } from '@lucide/svelte';
 	import { Navigation } from '@skeletonlabs/skeleton-svelte';
+
+	import favicon from '#lib/assets/favicon.svg';
 
 	import '../app.css';
 

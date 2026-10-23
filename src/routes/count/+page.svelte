@@ -1,8 +1,8 @@
 <script lang="ts">
-	import FileUploadHandler from '$lib/components/FileUploadHandler.svelte';
-	import { downloadCsv, fileStem } from '$lib/utils/download';
-	import { countValues, type Row } from '$lib/utils/parse';
-	import { parseFile, readColumns } from '$lib/utils/tabular';
+	import FileUploadHandler from '#lib/components/FileUploadHandler.svelte';
+	import { downloadCsv, fileStem } from '#lib/utils/download.js';
+	import { countValues, type Row } from '#lib/utils/parse.js';
+	import { parseFile, readColumns } from '#lib/utils/tabular.js';
 
 	let columns: string[] = $state([]);
 	let groupBy: null | string = $state(null);

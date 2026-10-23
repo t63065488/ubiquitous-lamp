@@ -4,10 +4,10 @@ Ubiquitous Lamp is a client-only SvelteKit app for quick data actions on CSV and
 
 ## Stack
 
-- SvelteKit 2 + Svelte 5 (runes only: `$state`, `$derived`, `$props`; no stores, no `export let`)
-- Skeleton v4 (`@skeletonlabs/skeleton-svelte`) on Tailwind 4, theme `nosh`
+- SvelteKit 3 + Svelte 5 (runes only: `$state`, `$derived`, `$props`; no stores, no `export let`)
+- Skeleton v5 (`@skeletonlabs/skeleton-svelte`) on Tailwind 4, theme `nosh`
 - PapaParse for CSV, SheetJS (`xlsx`) for `.xls`/`.xlsx`
-- Vitest 4 with two projects: `server` (Node) and `client` (Playwright Chromium)
+- Vitest 5 with two projects: `server` (Node) and `client` (Playwright Chromium)
 - `@sveltejs/adapter-static`, everything prerendered
 
 ## Commands
@@ -74,16 +74,18 @@ Always read files through `parseFile`, so CSV and Excel both work. `Row` is `Rec
 ## Gotchas
 
 - **Links must use `resolve()`** from `$app/paths` (e.g. `href={resolve('/count')}`). The site is served under `BASE_PATH` (`/ubiquitous-lamp`), so bare `/` hrefs break in production, and ESLint enforces this.
-- **Use Skeleton v4's composed APIs.** Many examples online show v3 props, such as `<Progress size=…>`, which renders nothing in v4. Check the anatomy in `node_modules/@skeletonlabs/skeleton-svelte/dist/components/<name>/anatomy/`.
+- **Use Skeleton v5's composed APIs.** Many examples online show v3 props, such as `<Progress size=…>`, which renders nothing in v4 or v5. Check the anatomy in `node_modules/@skeletonlabs/skeleton-svelte/dist/components/<name>/anatomy/`.
+- **Import from `#lib`, not `$lib`.** SvelteKit 3 replaced the `$lib` alias with `#lib` subpath imports (see `imports` in `package.json`). Use `.js` extensions for TS modules (e.g. `#lib/utils/parse.js`).
+- **TypeScript stays on 6.x.** SvelteKit 3, `typescript-eslint` and `svelte-check` don't support TypeScript 7 yet, so don't bump it past `~6.0` until they do.
 - **Install SheetJS only from the SheetJS CDN tarball** (see `package.json`). The npm-registry `xlsx` package is outdated and has known vulnerabilities, so never `npm i xlsx`.
 - **Listbox click workaround:** the `onpointerdown` focus handler on `Listbox.Content` in `sample/+page.svelte` works around a zag bug where the first click misses when the list is partly off-screen. Keep it.
 - **Keep `optimizeDeps.include`** in the client test project in `vite.config.ts`. Without it, a cold run (CI) re-optimizes mid-test, loads Svelte twice, and fails with `effect_orphan`.
-- **Don't silence Svelte warnings globally** in `svelte.config.js`. Fix them instead.
+- **Don't silence Svelte warnings globally** in the `sveltekit()` options in `vite.config.ts`. Fix them instead.
 - **Theme:** the theme name in `app.html` (`data-theme`) and the import in `app.css` must match.
 
 ## Tests
 
 - **Unit tests** go in `*.spec.ts` (server project, Node) beside the code. Use them for anything in `src/lib/utils/`. `File` is available in Node, so `parseFile` can be tested directly. Build `.xlsx` fixtures in-test with `utils.aoa_to_sheet` + `write`.
-- **Component tests** go in `*.svelte.spec.ts` (client project, real Chromium) and use `vitest-browser-svelte`'s `render` and `page` from `vitest/browser`. To upload files, call `page.elementLocator(input).upload(files)` on the hidden `input[type=file]`.
+- **Component tests** go in `*.svelte.spec.ts` (client project, real Chromium) and use `vitest-browser-svelte`'s `render` (async: `await render(...)`) and `page` from `vitest/browser`. To upload files, call `page.elementLocator(input).upload(files)` on the hidden `input[type=file]`.
 - **Assertions are required:** `expect.requireAssertions` is on, so every test must assert something.
 - **Screenshots:** failure screenshots land in `__screenshots__/`, which is gitignored.

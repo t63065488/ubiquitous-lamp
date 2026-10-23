@@ -33,9 +33,8 @@ const parseSpreadsheet = async (file: File): Promise<ParsedFile> => {
 		raw: false
 	});
 	const fields = header.map((cell, index) => defaultHeaderTransform(String(cell ?? ''), index));
-	const rows = body.map(
-		(cells): Row =>
-			Object.fromEntries(fields.map((field, index) => [field, String(cells[index] ?? '')]))
+	const rows = body.map((cells): Row =>
+		Object.fromEntries(fields.map((field, index) => [field, String(cells[index] ?? '')]))
 	);
 	return { fields, rows };
 };

@@ -16,7 +16,7 @@ const upload = async (container: HTMLElement, files: File[]) => {
 
 describe('FileUploadHandler.svelte', () => {
 	it('renders a custom label', async () => {
-		render(FileUploadHandler, {
+		await render(FileUploadHandler, {
 			label: 'Upload your documents here',
 			name: 'file-upload',
 			processFile: vi.fn(async () => [])
@@ -28,7 +28,7 @@ describe('FileUploadHandler.svelte', () => {
 	it('lists files that share a name and reports them to onFileUpload', async () => {
 		const onFileUpload = vi.fn();
 		const files = [csvFile('data.csv', 'a\n1\n'), csvFile('data.csv', 'a\n1\n2\n')];
-		const { container } = render(FileUploadHandler, {
+		const { container } = await render(FileUploadHandler, {
 			name: 'file-upload',
 			onFileUpload,
 			processFile: vi.fn(async () => [])
@@ -42,7 +42,7 @@ describe('FileUploadHandler.svelte', () => {
 	});
 
 	it('disables Process All when processing is not allowed', async () => {
-		const { container } = render(FileUploadHandler, {
+		const { container } = await render(FileUploadHandler, {
 			canProcess: false,
 			name: 'file-upload',
 			processFile: vi.fn(async () => [])
@@ -56,7 +56,7 @@ describe('FileUploadHandler.svelte', () => {
 	it('downloads processed results with their file names, skipping removed files', async () => {
 		const onDownload = vi.fn();
 		const processFile = vi.fn(async (file: File) => [{ name: file.name }]);
-		const { container } = render(FileUploadHandler, {
+		const { container } = await render(FileUploadHandler, {
 			name: 'file-upload',
 			onDownload,
 			processFile
